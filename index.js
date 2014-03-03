@@ -57,6 +57,6 @@ app.get("/", function(req, res) {
 app.get("/user", function(req, res) {
     res.send("HELLO " + req.user);
 });
-
-app.listen(process.env.PORT || 8080);
-console.log("I am listening");
+app.listen(process.env.PORT || 8080, function(){
+  console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+});
