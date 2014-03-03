@@ -1,0 +1,15 @@
+{
+  "name": "cookie-friends",
+  "version": "0.0.0",
+  "description": "Send your friends cookies!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index"
+  },
+  "dependencies" : {
+    "express" : "*"
+  },
+  "author": "",
+  "license": "BSD-2-Clause"
+}
