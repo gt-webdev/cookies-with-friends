@@ -1,14 +1,13 @@
 var express = require('express');
 var app = express();
 var everyauth = require('everyauth');
-var fbCreds = require('./fbCreds');
 
 everyauth.debug = true;
 
 users = {}; // object of UserID -> User
 everyauth.facebook
-    .appId(fbCreds.appId || process.env.FB_APP_ID)
-    .appSecret(process.env.FB_APP_SECRET  || fbCreds.appSecret)
+    .appId(process.env.FB_APP_ID)
+    .appSecret(fbCreds.appSecret)
     .findOrCreateUser(function(session, accessToken, accessTokenExtra, fbUserMetadata) {
         console.log("HI");
         var promise = this.Promise();
