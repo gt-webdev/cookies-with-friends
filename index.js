@@ -32,6 +32,7 @@ app.configure('development', function() {
 
 app.use(express.bodyParser())
    .use(express.logger())
+   .use(express.favicon())
    .use(express.cookieParser())
    .use(express.session({secret: "SECRET"}))
    .use(everyauth.middleware(app))
@@ -57,5 +58,5 @@ app.get("/user", function(req, res) {
     res.send("HELLO " + req.user);
 });
 
-app.listen(8080);
+app.listen(process.env.PORT || 8080);
 console.log("I am listening");
