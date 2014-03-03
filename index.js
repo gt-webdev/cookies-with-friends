@@ -5,12 +5,10 @@ var fbCreds = require('./fbCreds');
 
 everyauth.debug = true;
 
-
-
 users = {}; // object of UserID -> User
 everyauth.facebook
     .appId(fbCreds.appId || process.env.FB_APP_ID)
-    .appSecret(fbCreds.appSecret || process.env.FB_APP_SECRET)
+    .appSecret(process.env.FB_APP_SECRET  || fbCreds.appSecret)
     .findOrCreateUser(function(session, accessToken, accessTokenExtra, fbUserMetadata) {
         console.log("HI");
         var promise = this.Promise();
