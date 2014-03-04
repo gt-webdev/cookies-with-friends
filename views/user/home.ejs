@@ -4,13 +4,16 @@
         <% include ../styles %>
     </head>
     <% include header %>
-        <div>
-            Hello, <%= everyauth.user.name %>
+        <img id="home-bg" src="/images/cookies-bg.jpg">
+        <div class="content lighter">
+            <div class="greeting">Hello, <%= everyauth.user.name %></div>
             <p>Click on your friends to send them cookies! </p>
             <% for(var userId in currentUsers) { %>
                 <% if(currentUsers.hasOwnProperty(userId)) { %>
                     <% var user = currentUsers[userId]; %>
-                    <img onclick="sendCookie(<%=everyauth.user.id%>, <%=user.id%>);" src="<%=user.facebook.picture.data.url%>"/>
+                    <div class="user-send-cookie">
+                        <img onclick="sendCookie(<%=everyauth.user.id%>, <%=user.id%>);" src="<%=user.facebook.picture.data.url%>"/>
+                    </div>
                 <% } %>
             <% } %>
 

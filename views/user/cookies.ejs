@@ -4,7 +4,8 @@
         <% include ../styles %>
     </head>
     <% include header %>
-    <div class=cookie-container>
+    <img id="home-bg" src="/images/cookies-bg.jpg">
+    <div class="content cookies-content">
         <% for(var i = 0; i < cookies.length; i++) {  %>
             <div class="cookie-delivered">
                 <p class="cookies-description">A cookie for you, from <%=cookies[i].cookieFrom%></p>
