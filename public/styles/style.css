@@ -15,6 +15,7 @@ body {
     margin: none;
     z-index: -1;
 }
+
 .content .lighter {
     opacity: 0.7;
     overflow: auto; 
@@ -43,6 +44,7 @@ body {
     background-color: #4C6AAA;
     color: #efefef;
 }
+
 .content .login a {
     appearance: button;
     -moz-appearance: button;
@@ -70,7 +72,7 @@ body {
 /* Cookies page */
 .user-header-menu {
     margin-left: auto; margin-right: auto;
-    width: 300px;
+    width: 350px;
 
 }
 
@@ -125,6 +127,4 @@ body {
     width: 300px;
     height: auto;
     margin-left: auto; margin-right: auto;
-}
-
 }
