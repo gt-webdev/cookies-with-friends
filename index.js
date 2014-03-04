@@ -2,27 +2,19 @@ var express = require('express');
 var app = express();
 var everyauth = require('everyauth');
 
-everyauth.debug = true;
-
 var mongojs = require('mongojs');
 
 var mongoUri = process.env.MONGOLAB_URI ||
-  process.env.MONGOHQ_URL ||
-  'mongodb://localhost/cookie-friends'; 
+               process.env.MONGOHQ_URL ||
+               'mongodb://localhost/cookie-friends'; 
 
 var db = mongojs(mongoUri, ["users", "cookies"]);
 
-cookiesUrls = ["frosted-sugar-cookies.jpg", "oatmeal-raisin-cookies.jpg",
+var cookiesUrls = ["frosted-sugar-cookies.jpg", "oatmeal-raisin-cookies.jpg",
                 "double-chocolate-chip.jpg",  "macademia-nut.jpg","sugar-cookie.jpg"].map(
                     function(c) {return "/images/" + c;});
-/*cookies = {1352214896: [{
-      cookieImage: cookiesUrls[Math.floor(Math.random(cookiesUrls.length))],
-      cookieFrom: "STEVE",
-      cookieFromId: 123,
-      read: false
-    }
-]};*/ 
 
+//////////// Everyauth facebook //////////////////
 everyauth.facebook
     .appId(process.env.FB_APP_ID)
     .appSecret(process.env.FB_APP_SECRET)
@@ -48,9 +40,10 @@ everyauth.facebook
     })
     .redirectPath('/');
 
+/////////// App Middleware ///////////////
 var loginRegex = /\/auth\/*/;
 var publicRegex = /\/public\/*/
-var requireLogin = function(req, res, next) {
+var requireLoginMiddleware = function(req, res, next) {
     if(req.user) {return next();}
     // make sure they're not trying to log in or out
     if(req.path === "/" || 
@@ -63,21 +56,24 @@ var requireLogin = function(req, res, next) {
     return res.redirect("/");
 };
 
-app.use(express.bodyParser())
-   .use(express.logger())
-   .use(express.favicon())
-   .use(express.cookieParser())
-   .use(express.session({secret: process.env.SECRET || "SECRET"}))
-   .use(everyauth.middleware(app)) // req.user, 
-   .use(express.static(__dirname + "/public"))
-   .use(requireLogin)
-   .use(app.router); // use app.get( path, fn)
+app.use(express.bodyParser()) // access to request variables (req.body, req.query maybe)
+   .use(express.logger()) // log each request
+   .use(express.favicon()) // control cache limit .. ?
+   .use(express.cookieParser()) // have cookies parsed as object (req.cookies)
+   .use(express.session({secret: process.env.SECRET || "SECRET"})) // encrypt cookies
+   .use(everyauth.middleware(app)) // req.user for routes and everyauth.user for views.
+   .use(express.static(__dirname + "/public")) // serve assets from "public" directory in this dir 
+   .use(requireLoginMiddleware) // custom middleware for forcing user to login with facebook
+   .use(app.router); // enable app.get(path, fn)
 
 app.set('view engine', 'ejs');
 
 everyauth.everymodule.findUserById(function(userId, callback) {
+    // use this to serialize each user for each request (probably cached though)
     db.users.findOne({id: userId}, callback);
 });
+
+/////////////////// app routes //////////////////////
 
 app.get("/", function(req, res) {
     if(req.user) {
@@ -91,6 +87,7 @@ app.get("/", function(req, res) {
 });
 
 app.post("/cookies", function(req, res) {
+    // add a cookie for the user
     db.cookies.update(
         {
             id: req.body.to 
@@ -98,10 +95,10 @@ app.post("/cookies", function(req, res) {
         {
           $push: {
               cookies: {
-                  cookieImage: cookiesUrls[Math.floor(Math.random() * cookiesUrls.length)],
-                  cookieFrom: req.user.name,
-                  cookieFromId: req.user.id,
-                  read: false
+                      cookieImage: cookiesUrls[Math.floor(Math.random() * cookiesUrls.length)],
+                      cookieFrom: req.user.name,
+                      cookieFromId: req.user.id,
+                      read: false
                   }
               }
         }, 
@@ -113,13 +110,13 @@ app.post("/cookies", function(req, res) {
 });
 
 app.get("/cookies", function(req, res) {
+    // get all unread cookies, and mark them as read
     db.cookies.find({
         $and: [ {cookies: {$elemMatch: {read: false}}},
                 {id: req.user.id}]
     }, 
     function(err, docs) {
         if(err) {throw err;}
-        console.log(docs);
         if(docs.length == 0) {
             return res.render('user/cookies', {cookies: []});
         }
@@ -141,6 +138,7 @@ app.get("/cookies", function(req, res) {
     });
 });
 
-app.listen(process.env.PORT || 8080, function(){
+///////////// and run the app :) ////////////////////
+app.listen(process.env.PORT || 8080, function() {
   console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
 });
