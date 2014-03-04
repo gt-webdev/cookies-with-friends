@@ -11,7 +11,7 @@
     "express" : "*",
     "everyauth" : "*",
     "ejs" : "*",
-    "mongodb" : "*"
+    "mongojs" : "*"
   },
   "author": "",
   "license": "BSD-2-Clause"

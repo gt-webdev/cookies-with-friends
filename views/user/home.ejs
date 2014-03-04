@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <% include ../javascripts %>
+        <% include ../styles %>
+    </head>
+    <% include header %>
+        <div>
+            Hello, <%= everyauth.user.name %>
+            <p>Click on your friends to send them cookies! </p>
+            <% for(var userId in currentUsers) { %>
+                <% if(currentUsers.hasOwnProperty(userId)) { %>
+                    <% var user = currentUsers[userId]; %>
+                    <img onclick="sendCookie(<%=everyauth.user.id%>, <%=userId%>);" src="<%=user.facebook.picture.data.url%>"/>
+                <% } %>
+            <% } %>
+
+
+        </div>
+    <% include footer %>
+</html>

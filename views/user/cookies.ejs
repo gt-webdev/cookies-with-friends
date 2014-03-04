@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <% include ../javascripts %>
+        <% include ../styles %>
+    </head>
+    <% include header %>
+    <div class=cookie-container>
+        <% for(var i = 0; i < cookies.length; i++) {  %>
+            <div class="cookie-delivered">
+                <p class="cookies-description">A cookie for you, from <%=cookies[i].cookieFrom%></p>
+                <img class="cookie-picture" src="<%= cookies[i].cookieImage %>" />
+            </div>
+        <% } %>
+        <% if(cookies.length == 0) { %>
+            <p class="no-cookies-description">There are no cookies for now</p>
+
+        <% } %>
+
+    </div>
+    <% include footer %>
+</html>
