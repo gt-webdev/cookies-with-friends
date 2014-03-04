@@ -58,7 +58,7 @@ var requireLoginMiddleware = function(req, res, next) {
 
 app.use(express.bodyParser()) // access to request variables (req.body, req.query maybe)
    .use(express.logger()) // log each request
-   .use(express.favicon()) // control cache limit .. ?
+//   .use(express.favicon()) // control cache limit .. ?
    .use(express.cookieParser()) // have cookies parsed as object (req.cookies)
    .use(express.session({secret: process.env.SECRET || "SECRET"})) // encrypt cookies
    .use(everyauth.middleware(app)) // req.user for routes and everyauth.user for views.
