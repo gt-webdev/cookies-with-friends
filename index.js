@@ -2,24 +2,26 @@ var express = require('express');
 var app = express();
 var everyauth = require('everyauth');
 
-//everyauth.debug = true;
-/*var mongo = require('mongojs');
+everyauth.debug = true;
+
+var mongojs = require('mongojs');
 
 var mongoUri = process.env.MONGOLAB_URI ||
   process.env.MONGOHQ_URL ||
-  'mongodb://localhost/cookie-friends'; */
+  'mongodb://localhost/cookie-friends'; 
 
-users = {}; // object of UserID -> User
+var db = mongojs(mongoUri, ["users", "cookies"]);
+
 cookiesUrls = ["frosted-sugar-cookies.jpg", "oatmeal-raisin-cookies.jpg",
                 "double-chocolate-chip.jpg",  "macademia-nut.jpg","sugar-cookie.jpg"].map(
                     function(c) {return "/images/" + c;});
-cookies = {1352214896: [{
+/*cookies = {1352214896: [{
       cookieImage: cookiesUrls[Math.floor(Math.random(cookiesUrls.length))],
       cookieFrom: "STEVE",
       cookieFromId: 123,
       read: false
     }
-]}; 
+]};*/ 
 
 everyauth.facebook
     .appId(process.env.FB_APP_ID)
@@ -31,21 +33,18 @@ everyauth.facebook
     })
     .findOrCreateUser(function(session, accessToken, accessTokenExtra, fbUserMetadata) {
         var promise = this.Promise();
-        if(users[fbUserMetadata.id]) {
-            promise.fulfill(users[fbUserMetadata.id]);
-        }else { // create user on server
-            users[fbUserMetadata.id] = {
-                id: fbUserMetadata.id,
-                name: fbUserMetadata.name,
-                email: fbUserMetadata.email,
-                facebook: fbUserMetadata
-            };
-            promise.fulfill(users[fbUserMetadata.id]);
-        }
+        db.users.save({
+                    _id: fbUserMetadata.id, // ugly hack to create if not exist
+                    id: fbUserMetadata.id,
+                    name: fbUserMetadata.name,
+                    email: fbUserMetadata.email,
+                    facebook: fbUserMetadata
+                }
+        , function(err, doc, lastErrObj) {
+            if(err) throw err;
+            promise.fulfill(doc);
+        });
         return promise;
-    })
-    .findUserById(function() {
-        console.log(arguments); 
     })
     .redirectPath('/');
 
@@ -77,44 +76,69 @@ app.use(express.bodyParser())
 app.set('view engine', 'ejs');
 
 everyauth.everymodule.findUserById(function(userId, callback) {
-   console.log("FIND USER");
-   var user = users[userId] 
-   var err = null;
-   if(!user) {err = "No such user!"}
-   callback(err, user);
+    db.users.findOne({id: userId}, callback);
 });
 
 app.get("/", function(req, res) {
     if(req.user) {
-        res.render('user/home', {currentUsers: users});
+        db.users.find({}, function(err, docs) {
+            if(err) {throw err;}
+            res.render('user/home', {currentUsers: docs});
+        });
     }else {
         res.render('home');
     }
 });
 
 app.post("/cookies", function(req, res) {
-    if(!cookies[req.body.to]) {cookies[req.body.to] = [];}
-    cookies[req.body.to].push({
-      cookieImage: cookiesUrls[Math.floor(Math.random() * cookiesUrls.length)],
-      cookieFrom: req.user.name,
-      cookieFromId: req.user.id,
-      read: false
+    db.cookies.update(
+        {
+            id: req.body.to 
+        },
+        {
+          $push: {
+              cookies: {
+                  cookieImage: cookiesUrls[Math.floor(Math.random() * cookiesUrls.length)],
+                  cookieFrom: req.user.name,
+                  cookieFromId: req.user.id,
+                  read: false
+                  }
+              }
+        }, 
+        {upsert: true},
+    function(err, doc) {
+        if(err) throw err;
+        res.send("OK");
     });
-    res.send("OK");
 });
 
 app.get("/cookies", function(req, res) {
-    var userCookies = cookies[req.user.id];
-    console.log(userCookies);
-    var remainingCookies = [];
-    for(var i = userCookies.length - 1; i >= 0; i--) {
-        console.log(userCookies[i]);
-        if(!userCookies[i].read) {
-            userCookies[i].read = true;
-            remainingCookies.push(userCookies[i]);
-        }else {break;}
-    }    
-    res.render('user/cookies', {cookies: remainingCookies});
+    db.cookies.find({
+        $and: [ {cookies: {$elemMatch: {read: false}}},
+                {id: req.user.id}]
+    }, 
+    function(err, docs) {
+        if(err) {throw err;}
+        console.log(docs);
+        if(docs.length == 0) {
+            return res.render('user/cookies', {cookies: []});
+        }
+        var cookies = docs[0].cookies;
+        var unseenCookies = [];
+        for(var i = cookies.length - 1; i >= 0 && !cookies[i].read; i--) {
+            unseenCookies.push(cookies[i]);        
+        }
+        res.render('user/cookies', {cookies: unseenCookies});
+        var newCookies = cookies.map(function(c) {
+            var copy = JSON.stringify(c);
+            copy = JSON.parse(copy);
+            copy.read = true;
+            return copy;
+        });
+        var doc = docs[0];
+        doc.cookies = newCookies;
+        db.cookies.save(doc);
+    });
 });
 
 app.listen(process.env.PORT || 8080, function(){

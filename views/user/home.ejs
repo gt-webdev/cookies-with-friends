@@ -10,7 +10,7 @@
             <% for(var userId in currentUsers) { %>
                 <% if(currentUsers.hasOwnProperty(userId)) { %>
                     <% var user = currentUsers[userId]; %>
-                    <img onclick="sendCookie(<%=everyauth.user.id%>, <%=userId%>);" src="<%=user.facebook.picture.data.url%>"/>
+                    <img onclick="sendCookie(<%=everyauth.user.id%>, <%=user.id%>);" src="<%=user.facebook.picture.data.url%>"/>
                 <% } %>
             <% } %>
 
